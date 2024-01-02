@@ -1,4 +1,7 @@
 import puppeteer from "puppeteer"
+import fs from "fs"
+import os from "os"
+import path from "path"
 
 interface ClientId {
   _id: string;
@@ -31,6 +34,17 @@ async function main () {
       console.log(inactiveClient)
     }
 
+    // Get the user's home directory
+    const homeDirectory = os.homedir();
+
+    // Set the path to the desktop
+    const desktopPath = path.join(homeDirectory, 'Desktop');
+
+    // Specify the file path on the desktop
+    const filePathOnDesktop = path.join(desktopPath, 'clientes-inativos.txt');
+
+    fs.writeFileSync(filePathOnDesktop, inactiveClients.join("\n"));
+
     console.log("Finished");
   }
 
@@ -47,12 +61,12 @@ async function main () {
 
   const fetchTableItemsUrl = "auth/client/v2/report/dataclient/new-report?page"
 
-  const inactiveClientsTabButton = `#anota-template > div > div.tabs-container > anota-tabs > div > div > anota-tabs-item:nth-child(2) > button`
-  const selectOfAmountOfItensPerPage = `#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.sm.select-container.select-container__outline`
-  const containerWithOptionsForAmountOfItemsPerPage = `#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.container-options.show-container-options.container-options--open > div`
-  const lastOptionSelector = (numberOfOptions: number) => `#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.container-options.show-container-options.container-options--open > div > div:nth-child(${numberOfOptions})`
-  const nextPageButton = `#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-icon:nth-child(6)`
-  const pageCountSelector = `#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > span:nth-child(3)`
+  const inactiveClientsTabButton = "#anota-template > div > div.tabs-container > anota-tabs > div > div > anota-tabs-item:nth-child(2) > button"
+  const selectOfAmountOfItensPerPage = "#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.sm.select-container.select-container__outline"
+  const containerWithOptionsForAmountOfItemsPerPage = "#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.container-options.show-container-options.container-options--open > div"
+  const lastOptionSelector = (numberOfOptions: number) => "#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-select > div > div.container-options.show-container-options.container-options--open > div > div:nth-child(${numberOfOptions})"
+  const nextPageButton = "#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > anota-icon:nth-child(6)"
+  const pageCountSelector = "#anota-template > div > div.tabs-container > anota-tabs > div > anota-tabs-content:nth-child(3) > div > customer-table-header > div > div.info-table > anota-pagination > div > span:nth-child(3)"
 
   async function clickOnInactiveClientsTab () {
     await page.waitForSelector(inactiveClientsTabButton)
@@ -127,13 +141,14 @@ async function main () {
         inactiveClients.push(inactiveClient._id.phone)
       }
       
-      await sleep((Math.random() * 4 + 1) * 1000)
-
+      
       if (listOfInactiveClients.length === 0) {
         finish()
+      } else {
+        await sleep(Math.random() * 1000)
+        await goToNextPage(parseInt(page || "0") + 1)
       }
-
-      await goToNextPage(parseInt(page || "0") + 1)
+      
     } catch (e) {
       console.error(e)
     }
